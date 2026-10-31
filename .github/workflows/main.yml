@@ -1,0 +1,40 @@
+
+name: Build Wallet+
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: brew install ldid
+
+      - name: Install Theos
+        run: |
+          git clone --recursive https://github.com/theos/theos.git "$THEOS"
+          echo "THEOS=$THEOS" >> $GITHUB_ENV
+        env:
+          THEOS: /Users/runner/theos
+
+      - name: Install iOS SDK
+        run: |
+          git clone https://github.com/theos/sdks.git /Users/runner/theos/sdks
+
+      - name: Build Wallet+
+        run: |
+          make package FINALPACKAGE=1
+
+      - name: Upload Debian package
+        uses: actions/upload-artifact@v4
+        with:
+          name: WalletPlus
+          path: packages/*.deb
